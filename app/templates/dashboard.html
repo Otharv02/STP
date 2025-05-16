@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background-color: #c8c6e2;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .company-name {
+      font-size: 24px;
+      color: #333;
+    }
+    .nav-links a {
+      margin-left: 15px;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+    }
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+    .content {
+      padding: 20px;
+    }
+    .dashboard-title {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .search-container {
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+    }
+    .search-container input {
+      padding: 8px;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .search-container button {
+      padding: 8px 15px;
+      margin-left: 10px;
+      background-color: #3f51b5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .search-container button:hover {
+      background-color: #303f9f;
+    }
+    .sales-container {
+      margin-top: 20px;
+    }
+    .sale-card {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+      background-color: #f9f9f9;
+    }
+    .sale-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    .sale-header-left {
+      font-weight: bold;
+    }
+    .sale-header-right {
+      text-align: right;
+    }
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .items-table th, .items-table td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    .items-table th {
+      background-color: #f2f2f2;
+    }
+    .sale-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px solid #ddd;
+    }
+    .reference {
+      max-width: 50%;
+    }
+    .sale-total {
+      text-align: right;
+      font-weight: bold;
+    }
+    .no-results {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="company-name">Company</div>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/sales">Sales Form</a>
+      <a href="/dashboard">Dashboard</a>
+    </div>
+  </div>
+
+  <div class="content">
+    <h1 class="dashboard-title">Sales Dashboard</h1>
+
+    <div class="search-container">
+      <form action="/dashboard" method="get">
+        <input type="text" name="name" placeholder="Search by customer name..." value="{{ name_filter }}">
+        <button type="submit">Search</button>
+      </form>
+    </div>
+
+    <div class="sales-container">
+      {% if not logs %}
+        <div class="no-results">
+          {% if name_filter %}
+            No sales found for customer name "{{ name_filter }}".
+          {% else %}
+            No sales records found.
+          {% endif %}
+        </div>
+      {% else %}
+        {% for log in logs %}
+          <div class="sale-card">
+            <div class="sale-header">
+              <div class="sale-header-left">
+                <div>Customer: {{ log.Name }}</div>
+                <div>Phone: {{ log.Phone }}</div>
+                <div>Order By: {{ log['Order By'] }}</div>
+              </div>
+              <div class="sale-header-right">
+                <div>Invoice #: {{ log['Invoice Number'] }}</div>
+                <div>Invoice Date: {{ log['Invoice Date'] }}</div>
+                <div>Due Date: {{ log['Due Date'] }}</div>
+              </div>
+            </div>
+
+            <details>
+              <summary style="cursor: pointer; font-weight: bold; margin: 10px 0;">View Full Order Details</summary>
+              <div class="sale-items">
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th>Item Code</th>
+                      <th>Category</th>
+                      <th>Description</th>
+                      <th>Quantity</th>
+                      <th>Unit</th>
+                      <th>Price</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for item in log.items_list %}
+                      <tr>
+                        <td>{{ item.code }}</td>
+                        <td>{{ item.category }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.unit }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>{{ item.amount }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="sale-footer">
+                <div class="reference">
+                  <strong>Reference:</strong>
+                  <p>{{ log.Reference }}</p>
+                </div>
+                <div class="sale-total">
+                  <div>Round Off: {{ log['Round Off'] }}</div>
+                  <div>Total: {{ log.Total }}</div>
+                </div>
+              </div>
+            </details>
+
+            <div style="margin-top: 10px;">
+              <label for="status_{{ loop.index }}" style="font-weight: bold;">Status:</label>
+              <select id="status_{{ loop.index }}" name="status_{{ loop.index }}">
+                <option value="Estimate">Estimate</option>
+                <option value="Sales Order">Sales Order</option>
+                <option value="Sale">Sale</option>
+                <option value="Delivery Challan">Delivery Challan</option>
+              </select>
+            </div>
+          </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.querySelector('input[name="name"]');
+      if (searchInput) {
+        searchInput.focus();
+      }
+    });
+  </script>
+</body>
+</html>
